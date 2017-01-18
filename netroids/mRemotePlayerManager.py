@@ -9,7 +9,6 @@ class RemotePlayerManager:
         self.score = 0
         ship.playerManager = self
         self.timeLastHeardFrom = None
-    
+
     def resetScore(self):
         self.score = 0
-    

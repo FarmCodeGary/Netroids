@@ -1,4 +1,6 @@
-import mEntity, time
+import time
+import mEntity
+
 
 class Bullet(mEntity.Entity):
     def __init__(self, entityID, parentEntity, x, y, rotation):
@@ -7,14 +9,15 @@ class Bullet(mEntity.Entity):
         self.parentEntity = parentEntity
         self.radius = 2
         self.rotation = rotation
-    
+
     def act(self, currentTime, server):
         if (currentTime - self.creationTime) > 1.0:
             # Destroy the bullet.
             server.removeEntity(self)
-            
-    def handleCollision(self,otherEntity,server):
-        if isinstance(otherEntity,mAsteroid.Asteroid):
+
+    def handleCollision(self, otherEntity, server):
+        if isinstance(otherEntity, mAsteroid.Asteroid):
             server.removeEntity(self)
 
+# TODO: Remove circular dependency!
 import mAsteroid
