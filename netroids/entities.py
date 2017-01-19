@@ -3,7 +3,7 @@ import random
 import time
 
 
-def createFromSnapshotLine(line):
+def entity_from_snapshot(line):
     parts = line.split()
     entityID = int(parts[0])
     entity = Entity(entityID)

@@ -2,17 +2,15 @@ import time
 import random
 import math
 
-import mSpaceship
-import mBullet
-import mAsteroid
-import mNetroidsBase
-import mGUI
-import mRemotePlayerManager
+from entities import Spaceship, Asteroid, Bullet
+import engine
+from interface import QUIT_EVENT
+from player_managers import RemotePlayerManager
 
 
-class Server(mNetroidsBase.NetroidsBase):
+class Server(engine.NetroidsEngine):
     def __init__(self, localAddress, playerName):
-        mNetroidsBase.NetroidsBase.__init__(self, localAddress, playerName)
+        engine.NetroidsEngine.__init__(self, localAddress, playerName)
 
         self.playerLookPool = []
         self.playerLookPool.append(("BLUESHIP", (0, 0, 255)))
@@ -29,32 +27,31 @@ class Server(mNetroidsBase.NetroidsBase):
         localPlayerLook = random.choice(self.playerLookPool)
         self.playerLookPool.remove(localPlayerLook)
         glyph, color = localPlayerLook
-        self.localPlayerShip = mSpaceship.Spaceship(
+        self.localPlayerShip = Spaceship(
             self.getNextEntityID(), glyph, 400, 300)
-        self.localPlayer = mRemotePlayerManager.RemotePlayerManager(
+        self.localPlayer = RemotePlayerManager(
             None, self.playerName, color, self.localPlayerShip)
         self.addEntity(self.localPlayerShip)
         self.finished = False
         self.setMessageHandler(
-            mNetroidsBase.CONTROLMESSAGE, self.handleControlMessage)
+            engine.CONTROLMESSAGE, self.handleControlMessage)
         self.setMessageHandler(
-            mNetroidsBase.CONNECTREQUESTMESSAGE, self.handleConnectRequest)
-        self.setMessageHandler(mNetroidsBase.PINGMESSAGE, self.handlePing)
-        self.gui.setEventHandler(mGUI.QUIT_EVENT, self.endGame)
+            engine.CONNECTREQUESTMESSAGE, self.handleConnectRequest)
+        self.setMessageHandler(engine.PINGMESSAGE, self.handlePing)
+        self.gui.setEventHandler(QUIT_EVENT, self.endGame)
         self.messagingService.disconnectHandler = self.onAddressDisconnected
         self.setMessageHandler(
-            mNetroidsBase.DISCONNECTMESSAGE, self.handleDisconnectMessage)
+            engine.DISCONNECTMESSAGE, self.handleDisconnectMessage)
 
     def addPlayer(self, address, name):
         look = random.choice(self.playerLookPool)
         self.playerLookPool.remove(look)
         glyph, color = look
-        playerShip = mSpaceship.Spaceship(
+        playerShip = Spaceship(
             self.getNextEntityID(), glyph, 400, 300)
         self.resetShipPosition(playerShip)
         self.addEntity(playerShip)
-        playerManager = mRemotePlayerManager.RemotePlayerManager(
-            address, name, color, playerShip)
+        playerManager = RemotePlayerManager(address, name, color, playerShip)
         playerManager.timeLastHeardFrom = time.time()
         self.playerMap[address] = playerManager
         reply = "CONNECTACCEPT\n"+str(playerShip.entityID)
@@ -102,11 +99,11 @@ class Server(mNetroidsBase.NetroidsBase):
         placed = False
         while not placed:
             ship.x = random.randint(
-                mNetroidsBase.WRAP_PADDING,
-                self.worldWidth - mNetroidsBase.WRAP_PADDING)
+                engine.WRAP_PADDING,
+                self.worldWidth - engine.WRAP_PADDING)
             ship.y = random.randint(
-                mNetroidsBase.WRAP_PADDING,
-                self.worldHeight - mNetroidsBase.WRAP_PADDING)
+                engine.WRAP_PADDING,
+                self.worldHeight - engine.WRAP_PADDING)
             placed = not self.testForCollision(ship)
         ship.xSpeed = 0
         ship.ySpeed = 0
@@ -115,7 +112,7 @@ class Server(mNetroidsBase.NetroidsBase):
     def startRound(self):
         for i in range(self.asteroidsPerRound):
             placed = False
-            asteroid = mAsteroid.Asteroid(self.getNextEntityID(), 0, 0)
+            asteroid = Asteroid(self.getNextEntityID(), 0, 0)
             while not placed:
                 asteroid.x = random.randint(0, self.worldWidth)
                 asteroid.y = random.randint(0, self.worldHeight)
@@ -157,7 +154,7 @@ class Server(mNetroidsBase.NetroidsBase):
     def checkAsteroids(self):
         asteroidsLeft = False
         for entity in self.entityMap.values():
-            if isinstance(entity, mAsteroid.Asteroid):
+            if isinstance(entity, Asteroid):
                 asteroidsLeft = True
                 break
         if not asteroidsLeft:
@@ -252,7 +249,7 @@ class Server(mNetroidsBase.NetroidsBase):
             ship.startShooting()
         elif shootingStatus == "off":
             ship.stopShooting()
-        elif shootingStatus == None:
+        elif shootingStatus is None:
             pass
         else:
             raise Exception("Invalid shooting status")
@@ -260,15 +257,15 @@ class Server(mNetroidsBase.NetroidsBase):
     def letEntitiesAct(self):
         currentTime = time.time()
         for entity in self.entityMap.values():
-            entity.act(currentTime,self)
+            entity.act(currentTime, self)
 
     def handleCollisions(self):
         entities = self.entityMap.values()
         for i, entity1 in enumerate(entities):
             for entity2 in entities[(i+1):]:
                 if entity1.testForCollision(entity2):
-                    entity1.handleCollision(entity2,self)
-                    entity2.handleCollision(entity1,self)
+                    entity1.handleCollision(entity2, self)
+                    entity2.handleCollision(entity1, self)
 
     def testForCollision(self, entity):
         for otherEntity in self.entityMap.values():
@@ -276,24 +273,24 @@ class Server(mNetroidsBase.NetroidsBase):
                 return True
         return False
 
-    def spawnBullet(self,x,y,direction,parentEntity):
-        bullet = mBullet.Bullet(self.getNextEntityID(), parentEntity, x, y, direction)
+    def spawnBullet(self, x, y, direction, parentEntity):
+        bullet = Bullet(self.getNextEntityID(), parentEntity, x, y, direction)
         radians = math.radians(direction)
         bullet.xSpeed = math.cos(radians) * 15
         bullet.ySpeed = -math.sin(radians) * 15
         self.addEntity(bullet)
 
-    def broadcastChatMessage(self,message,color):
+    def broadcastChatMessage(self, message, color):
         colorString = ",".join([str(comp) for comp in color])
         for playerAddress in self.playerMap.keys():
-            self.messagingService.sendMessage("CHATCAST\n"+colorString+"\n"+message, playerAddress, True)
-        self.chatMessages.append((message,time.time()))
+            self.messagingService.sendMessage(
+                "CHATCAST\n"+colorString+"\n"+message, playerAddress, True)
+        self.chatMessages.append((message, time.time()))
 
     def checkForDisconnections(self, currentTime):
         for remotePlayerManager in self.playerMap.values():
             if currentTime - remotePlayerManager.timeLastHeardFrom > 10.0:
                 self.onAddressDisconnected(remotePlayerManager.ipAddress)
-
 
     def go(self):
         self.messagingService.startListening()
@@ -307,7 +304,7 @@ class Server(mNetroidsBase.NetroidsBase):
                 self.checkForDisconnections(currentTime)
             self.executeStuff()
             self.gui.processEvents()
-            self.localPlayerManager.clearFiredThisFrame() # Todo: Make this cleaner
+            self.localPlayerManager.clearFiredThisFrame()  # Todo: Make this cleaner
             self.updatePlayerShip()
             self.updateEntityPositions()
             self.letEntitiesAct()

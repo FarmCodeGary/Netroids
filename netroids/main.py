@@ -19,11 +19,13 @@ if __name__ == "__main__":
     if client_or_server.strip() == "2":
         local_address = get_local_address()
         server_address = raw_input("Enter the IP address of a server: ").strip()
-        import mClient
-        client = mClient.Client(local_address, server_address, name)
-        client.go()
+        # TODO: Move this import?
+        import client
+        the_client = client.Client(local_address, server_address, name)
+        the_client.go()
     else:
         local_address = get_local_address()
-        import mServer
-        server = mServer.Server(local_address, name)
-        server.go()
+        # TODO: Move this import?
+        import server
+        the_server = server.Server(local_address, name)
+        the_server.go()

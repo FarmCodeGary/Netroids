@@ -1,13 +1,14 @@
 import time
 
-import mNetroidsBase
-import mEntity
-import mGUI
+from engine import (NetroidsEngine, CHATMESSAGE, CONNECTACCEPTMESSAGE,
+                    DISCONNECTMESSAGE, PINGREPLYMESSAGE, SNAPSHOTMESSAGE)
+from entities import entity_from_snapshot
+from interface import QUIT_EVENT
 
 
-class Client(mNetroidsBase.NetroidsBase):
+class Client(NetroidsEngine):
     def __init__(self, localAddress, serverAddress, playerName):
-        mNetroidsBase.NetroidsBase.__init__(self, localAddress, playerName)
+        NetroidsEngine.__init__(self, localAddress, playerName)
         self.lastSnapshotNumber = -1
         self.lastSnapshotTime = None
         self.lastPingNumber = 0
@@ -19,16 +20,16 @@ class Client(mNetroidsBase.NetroidsBase):
         self.finished = False
         self.scoreStrings = []
         self.setMessageHandler(
-            mNetroidsBase.CONNECTACCEPTMESSAGE,
+            CONNECTACCEPTMESSAGE,
             self.handleConnectAcceptMessage)
         self.setMessageHandler(
-            mNetroidsBase.SNAPSHOTMESSAGE, self.handleSnapshotMessage)
-        self.setMessageHandler(mNetroidsBase.CHATMESSAGE, self.handleChatCast)
+            SNAPSHOTMESSAGE, self.handleSnapshotMessage)
+        self.setMessageHandler(CHATMESSAGE, self.handleChatCast)
         self.setMessageHandler(
-            mNetroidsBase.PINGREPLYMESSAGE, self.handlePingReply)
+            PINGREPLYMESSAGE, self.handlePingReply)
         self.setMessageHandler(
-            mNetroidsBase.DISCONNECTMESSAGE, self.handleDisconnectMessage)
-        self.gui.setEventHandler(mGUI.QUIT_EVENT, self.quit)
+            DISCONNECTMESSAGE, self.handleDisconnectMessage)
+        self.gui.setEventHandler(QUIT_EVENT, self.quit)
 
     def getScoreStrings(self):
         return self.scoreStrings
@@ -69,7 +70,7 @@ class Client(mNetroidsBase.NetroidsBase):
                     self.scoreStrings.append((color, scoreString))
 
             for line in lines[i:]:
-                entity = mEntity.createFromSnapshotLine(line)
+                entity = entity_from_snapshot(line)
                 self.addEntity(entity)
 
     def handlePingReply(self, message, address):

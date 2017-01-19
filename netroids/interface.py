@@ -12,13 +12,41 @@ DOWN_RELEASED_EVENT = "DOWN_RELEASED"
 SPACE_PRESSED_EVENT = "SPACE_PRESSED"
 SPACE_RELEASED_EVENT = "SPACE_RELEASED"
 
+COLOR_KEY = (64, 128, 128)  # Color used to indicate transparency
+
+pygame.font.init()
+pygame.display.init()
+
 icon = pygame.image.load("media/asteroid1.png")
-icon.set_colorkey((64, 128, 128))
+icon.set_colorkey(COLOR_KEY)
 pygame.display.set_icon(icon)
 screen = pygame.display.set_mode((800, 600))
 pygame.display.set_caption("Netroids, by Garrison Benson")
 
-pygame.font.init()
+_glyphs = {}
+
+_glyphs["BLUESHIP"] = pygame.image.load("media/xwing_blue.png").convert()
+_glyphs["BLUESHIP"].set_colorkey(COLOR_KEY)
+
+_glyphs["YELLOWSHIP"] = pygame.image.load("media/naboo.png").convert()
+_glyphs["YELLOWSHIP"].set_colorkey(COLOR_KEY)
+
+_glyphs["REDSHIP"] = pygame.image.load("media/awing.png").convert()
+_glyphs["REDSHIP"].set_colorkey(COLOR_KEY)
+
+_glyphs["GREENSHIP"] = pygame.image.load("media/tie.png").convert()
+_glyphs["GREENSHIP"].set_colorkey(COLOR_KEY)
+
+_glyphs["ASTEROID1"] = pygame.image.load("media/asteroid1.png").convert()
+_glyphs["ASTEROID1"].set_colorkey(COLOR_KEY)
+
+_glyphs["ASTEROID2"] = pygame.image.load("media/asteroid2.png").convert()
+_glyphs["ASTEROID2"].set_colorkey(COLOR_KEY)
+
+_glyphs["LASER"] = pygame.image.load("media/laser.png").convert()
+_glyphs["LASER"].set_colorkey(COLOR_KEY)
+
+_glyphs["BACKGROUND"] = pygame.image.load("media/stars.jpg").convert()
 
 
 class GUI:
@@ -28,10 +56,10 @@ class GUI:
         self.chatFont = pygame.font.Font(None, 24)
 
     def draw(self, dataModel):
-        backgroundImage = mGlyphMap.getImage("BACKGROUND")
+        backgroundImage = _glyphs["BACKGROUND"]
         screen.blit(backgroundImage, (0, 0))
         for entity in dataModel.getEntities():
-            originalImage = mGlyphMap.getImage(entity.glyph)
+            originalImage = _glyphs[entity.glyph]
             rotatedImage = pygame.transform.rotate(
                 originalImage, entity.rotation)
             halfWidth = rotatedImage.get_width() / 2.0
@@ -90,6 +118,3 @@ class GUI:
 
     def tick(self):
         self.clock.tick(25)
-
-# TODO: Fix this awkwardness!
-import mGlyphMap

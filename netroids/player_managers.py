@@ -1,4 +1,8 @@
-import mGUI
+from interface import (
+    DOWN_PRESSED_EVENT, DOWN_RELEASED_EVENT, UP_PRESSED_EVENT,
+    UP_RELEASED_EVENT, LEFT_PRESSED_EVENT, LEFT_RELEASED_EVENT,
+    RIGHT_PRESSED_EVENT, RIGHT_RELEASED_EVENT, SPACE_PRESSED_EVENT,
+    SPACE_RELEASED_EVENT)
 
 
 class LocalPlayerManager:
@@ -10,16 +14,16 @@ class LocalPlayerManager:
         self.rightPressed = False
         self.spacePressed = False
         self.firedThisFrame = False
-        gui.setEventHandler(mGUI.DOWN_PRESSED_EVENT, self.onDownPressed)
-        gui.setEventHandler(mGUI.DOWN_RELEASED_EVENT, self.onDownReleased)
-        gui.setEventHandler(mGUI.UP_PRESSED_EVENT, self.onUpPressed)
-        gui.setEventHandler(mGUI.UP_RELEASED_EVENT, self.onUpReleased)
-        gui.setEventHandler(mGUI.LEFT_PRESSED_EVENT, self.onLeftPressed)
-        gui.setEventHandler(mGUI.LEFT_RELEASED_EVENT, self.onLeftReleased)
-        gui.setEventHandler(mGUI.RIGHT_PRESSED_EVENT, self.onRightPressed)
-        gui.setEventHandler(mGUI.RIGHT_RELEASED_EVENT, self.onRightReleased)
-        gui.setEventHandler(mGUI.SPACE_PRESSED_EVENT, self.onSpacePressed)
-        gui.setEventHandler(mGUI.SPACE_RELEASED_EVENT, self.onSpaceReleased)
+        gui.setEventHandler(DOWN_PRESSED_EVENT, self.onDownPressed)
+        gui.setEventHandler(DOWN_RELEASED_EVENT, self.onDownReleased)
+        gui.setEventHandler(UP_PRESSED_EVENT, self.onUpPressed)
+        gui.setEventHandler(UP_RELEASED_EVENT, self.onUpReleased)
+        gui.setEventHandler(LEFT_PRESSED_EVENT, self.onLeftPressed)
+        gui.setEventHandler(LEFT_RELEASED_EVENT, self.onLeftReleased)
+        gui.setEventHandler(RIGHT_PRESSED_EVENT, self.onRightPressed)
+        gui.setEventHandler(RIGHT_RELEASED_EVENT, self.onRightReleased)
+        gui.setEventHandler(SPACE_PRESSED_EVENT, self.onSpacePressed)
+        gui.setEventHandler(SPACE_RELEASED_EVENT, self.onSpaceReleased)
 
     def setEntity(self, entityID):
         self.entityID = entityID
@@ -93,3 +97,17 @@ class LocalPlayerManager:
                     self.getThrottleStatus()+"\nRotating:" +
                     self.getRotationStatus()+"\nShooting:" +
                     self.getShootingStatus())
+
+
+class RemotePlayerManager:
+    def __init__(self, ipAddress, name, color, ship):
+        self.ipAddress = ipAddress
+        self.name = name
+        self.color = color
+        self.ship = ship
+        self.score = 0
+        ship.playerManager = self
+        self.timeLastHeardFrom = None
+
+    def resetScore(self):
+        self.score = 0

@@ -3,9 +3,9 @@ from __future__ import with_statement
 import time
 import threading
 
-import mMessagingService
-import mGUI
-import mLocalPlayerManager
+from messaging_service import MessagingService
+from interface import GUI
+from player_managers import LocalPlayerManager
 
 CONTROLMESSAGE = "CONTROL"
 CONNECTREQUESTMESSAGE = "CONNECTREQUEST"
@@ -21,19 +21,18 @@ CHATMESSAGE = "CHATCAST"
 WRAP_PADDING = 16
 
 
-class NetroidsBase:
+class NetroidsEngine:
     def __init__(self, localAddress, playerName):
         self.entityMap = {}  # Maps IDs to entities
-        self.messagingService = mMessagingService.MessagingService(
+        self.messagingService = MessagingService(
             localAddress)
 
         self.playerName = playerName
         self.messageHandlers = {}  # Maps message types to callback methods
         self.worldWidth = 800  # TODO: Make this something the server sends to the client.
         self.worldHeight = 600
-        self.gui = mGUI.GUI()
-        self.localPlayerManager = mLocalPlayerManager.LocalPlayerManager(
-            self.gui)
+        self.gui = GUI()
+        self.localPlayerManager = LocalPlayerManager(self.gui)
         # self.chatMessages = [("Hello, world!",5),("You smell!",3), ("Ha ha ha ha ha!",4)] # Queue of tuples of form (string, creationTime)
         self.chatMessages = []
         self.stuffToExecuteLater = []  # Queue of callables
