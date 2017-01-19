@@ -1,4 +1,6 @@
 import math
+import random
+import time
 
 
 def createFromSnapshotLine(line):
@@ -78,3 +80,114 @@ class Entity:
 
     def act(self, currentTime, server):
         pass
+
+    def destroys_asteroid(self):
+        return False
+
+    def destroys_ship(self):
+        return False
+
+    def destroys_bullet(self):
+        return False
+
+
+class Asteroid(Entity):
+    def __init__(self, entityID, x, y):
+        glyphNum = random.randint(1, 2)
+        glyph = "ASTEROID"+str(glyphNum)
+        # TODO: Use super()
+        Entity.__init__(self, entityID, glyph, x, y)
+        direction = random.randint(0, 359)
+        speed = random.randint(1, 4)
+        self.xSpeed = math.cos(direction) * speed
+        self.ySpeed = -math.sin(direction) * speed
+        self.rotation = random.randint(0, 359)
+        self.rotationSpeed = random.randint(-4, 4)
+
+    def handleCollision(self, otherEntity, server):
+        if otherEntity.destroys_asteroid():
+            server.removeEntity(self)
+            # TODO: Fix this--only bullets have parent entities.
+            server.onAsteroidDestroyed(otherEntity.parentEntity)
+#        elif isinstance(otherEntity,Asteroid):
+#            mySpeed = math.hypot(self.xSpeed, self.ySpeed)
+#            angleBetween = math.atan2(self.y - otherEntity.y, self.x - otherEntity.x) + math.pi
+#            myAngle = math.atan2(self.ySpeed, self.xSpeed)
+#            diff = angleBetween - myAngle
+#            newAngle = angleBetween + 2*diff
+#            self.xSpeed = math.cos(newAngle) * mySpeed
+#            self.ySpeed = math.sin(newAngle) * mySpeed
+#            self.x += self.xSpeed
+#            self.y += self.ySpeed
+            # Bounce!
+
+    def destroys_ship(self):
+        return True
+
+    def destroys_bullet(self):
+        return True
+
+
+class Spaceship(Entity):
+    def __init__(self, entityID, glyph, x, y):
+        # TODO: Use super()
+        Entity.__init__(self, entityID, glyph, x, y)
+        self.lastBulletTime = 0
+        self.shooting = False
+        self.radius = 10
+        self.playerManager = None
+
+    def thrustForward(self):
+        self.accel = self.thrusterPower
+
+    def thrustBackward(self):
+        self.accel = -self.thrusterPower
+
+    def turnOffThrusters(self):
+        self.accel = 0
+
+    def rotateLeft(self):
+        self.rotationSpeed = 7
+
+    def rotateRight(self):
+        self.rotationSpeed = -7
+
+    def stopRotation(self):
+        self.rotationSpeed = 0
+
+    def startShooting(self):
+        self.shooting = True
+
+    def stopShooting(self):
+        self.shooting = False
+
+    def act(self, currentTime, server):
+        if self.shooting and (currentTime - self.lastBulletTime) > 0.5:
+            self.lastBulletTime = currentTime
+            server.spawnBullet(self.x, self.y, self.rotation, self)
+
+    def handleCollision(self, otherEntity, server):
+        if otherEntity.destroys_ship():
+            server.onPlayerDeath(self)
+
+
+class Bullet(Entity):
+    def __init__(self, entityID, parentEntity, x, y, rotation):
+        # TODO: Use super()
+        Entity.__init__(self, entityID, "LASER", x, y)
+        self.creationTime = time.time()
+        self.parentEntity = parentEntity
+        self.radius = 2
+        self.rotation = rotation
+
+    def act(self, currentTime, server):
+        if (currentTime - self.creationTime) > 1.0:
+            # Destroy the bullet.
+            server.removeEntity(self)
+
+    def handleCollision(self, otherEntity, server):
+        if otherEntity.destroys_bullet():
+            server.removeEntity(self)
+
+    def destroys_asteroid(self):
+        return True
