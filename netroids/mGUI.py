@@ -13,7 +13,7 @@ DOWN_RELEASED_EVENT = "DOWN_RELEASED"
 SPACE_PRESSED_EVENT = "SPACE_PRESSED"
 SPACE_RELEASED_EVENT = "SPACE_RELEASED"
 
-icon = pygame.image.load("asteroid1.png")
+icon = pygame.image.load("media/asteroid1.png")
 icon.set_colorkey((64, 128, 128))
 pygame.display.set_icon(icon)
 screen = pygame.display.set_mode((800, 600))
@@ -21,15 +21,16 @@ pygame.display.set_caption("Netroids, by Garrison Benson")
 
 pygame.font.init()
 
+
 class GUI:
     def __init__(self):
-        self.eventHandlers = {} # Maps event names to handlers
+        self.eventHandlers = {}  # Maps event names to handlers
         self.clock = pygame.time.Clock()
         self.chatFont = pygame.font.Font(None, 24)
 
     def draw(self, dataModel):
         backgroundImage = mGlyphMap.getImage("BACKGROUND")
-        screen.blit(backgroundImage,(0,0))
+        screen.blit(backgroundImage, (0, 0))
         for entity in dataModel.getEntities():
             originalImage = mGlyphMap.getImage(entity.glyph)
             rotatedImage = pygame.transform.rotate(
