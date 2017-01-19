@@ -3,4 +3,4 @@
 DIR=$(dirname $(readlink -f $0))
 cd $DIR
 cd ..
-python netroids/Main.py
+python netroids/main.py
