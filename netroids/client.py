@@ -1,62 +1,63 @@
 import time
 
-from engine import (NetroidsEngine, CHATMESSAGE, CONNECTACCEPTMESSAGE,
-                    DISCONNECTMESSAGE, PINGREPLYMESSAGE, SNAPSHOTMESSAGE)
-from entities import entity_from_snapshot
+from engine import (NetroidsEngine, CHAT_MESSAGE, CONNECT_ACCEPT_MESSAGE,
+                    DISCONNECT_MESSAGE, PING_REPLY_MESSAGE, SNAPSHOT_MESSAGE)
+from entities import entity_from_snapshot_line
 from interface import QUIT_EVENT
 
 
 class Client(NetroidsEngine):
-    def __init__(self, localAddress, serverAddress, playerName):
-        NetroidsEngine.__init__(self, localAddress, playerName)
-        self.lastSnapshotNumber = -1
-        self.lastSnapshotTime = None
-        self.lastPingNumber = 0
-        self.lastPingTime = 0
+    def __init__(self, local_address, server_address, player_name):
+        # TODO: Switch to super()
+        NetroidsEngine.__init__(self, local_address, player_name)
+        self.last_snapshot_number = -1
+        self.last_snapshot_time = None
+        self.last_ping_number = 0
+        self.last_ping_time = 0
         self.rtts = []  # RTTs for last 30 seconds
-        self.avgRTT = 0  # Average RTT over last 30 seconds
-        self.serverAddress = serverAddress
-        self.snapshotReceived = False
+        self.avg_rtt = 0  # Average RTT over last 30 seconds
+        self.server_address = server_address
+        self.snapshot_received = False
         self.finished = False
-        self.scoreStrings = []
-        self.setMessageHandler(
-            CONNECTACCEPTMESSAGE,
-            self.handleConnectAcceptMessage)
-        self.setMessageHandler(
-            SNAPSHOTMESSAGE, self.handleSnapshotMessage)
-        self.setMessageHandler(CHATMESSAGE, self.handleChatCast)
-        self.setMessageHandler(
-            PINGREPLYMESSAGE, self.handlePingReply)
-        self.setMessageHandler(
-            DISCONNECTMESSAGE, self.handleDisconnectMessage)
-        self.gui.setEventHandler(QUIT_EVENT, self.quit)
+        self.score_strings = []
+        self.set_message_handler(
+            CONNECT_ACCEPT_MESSAGE,
+            self.handle_connect_accept_message)
+        self.set_message_handler(
+            SNAPSHOT_MESSAGE, self.handle_snapshot_message)
+        self.set_message_handler(CHAT_MESSAGE, self.handle_chat_cast)
+        self.set_message_handler(
+            PING_REPLY_MESSAGE, self.handle_ping_reply)
+        self.set_message_handler(
+            DISCONNECT_MESSAGE, self.handle_disconnect_message)
+        self.gui.set_event_handler(QUIT_EVENT, self.quit)
 
-    def getScoreStrings(self):
-        return self.scoreStrings
+    def get_score_strings(self):
+        return self.score_strings
         # return [(p.color,p.name+": "+str(p.score)) for p in self.getAllPlayers()]
 
-    def handleConnectAcceptMessage(self, message, address):
+    def handle_connect_accept_message(self, message, address):
         lines = message.splitlines()
         entityID = int(lines[1].strip())
-        self.localPlayerManager.setEntity(entityID)
-        self.lastSnapshotTime = time.time()
+        self.local_player_manager.setEntity(entityID)
+        self.last_snapshot_time = time.time()
 
-    def handleChatCast(self, message, address):
+    def handle_chat_cast(self, message, address):
         lines = message.splitlines()
         color = tuple([int(comp) for comp in lines[1].split(",")])
-        chatMessage = lines[2]
-        self.chatMessages.append((chatMessage, time.time()))
+        chat_message = lines[2]
+        self.chat_messages.append((chat_message, time.time()))
 
-    def handleSnapshotMessage(self, message, address):
+    def handle_snapshot_message(self, message, address):
         # TODO: Add position extrapolation (after it works without it!)
         lines = message.splitlines()
-        snapshotNumber = int(lines[1])
-        self.lastSnapshotTime = time.time()
-        if snapshotNumber > self.lastSnapshotNumber:
-            self.snapshotReceived = True
-            self.lastSnapshotNumber = snapshotNumber
-            self.entityMap.clear()
-            self.scoreStrings = []
+        snapshot_number = int(lines[1])
+        self.last_snapshot_time = time.time()
+        if snapshot_number > self.last_snapshot_number:
+            self.snapshot_received = True
+            self.last_snapshot_number = snapshot_number
+            self.entity_map.clear()
+            self.score_strings = []
             i = 2
             while True:
                 line = lines[i]
@@ -66,78 +67,78 @@ class Client(NetroidsEngine):
                 else:
                     parts = line.split("|")
                     color = tuple([int(comp) for comp in parts[0].split(",")])
-                    scoreString = parts[1]
-                    self.scoreStrings.append((color, scoreString))
+                    score_string = parts[1]
+                    self.score_strings.append((color, score_string))
 
             for line in lines[i:]:
-                entity = entity_from_snapshot(line)
-                self.addEntity(entity)
+                entity = entity_from_snapshot_line(line)
+                self.add_entity(entity)
 
-    def handlePingReply(self, message, address):
+    def handle_ping_reply(self, message, address):
         lines = message.splitlines()
-        pingNumber = int(lines[1])
-        if pingNumber == self.lastPingNumber:
-            rtt = time.time() - self.lastPingTime
+        ping_number = int(lines[1])
+        if ping_number == self.last_ping_number:
+            rtt = time.time() - self.last_ping_time
             if self.rtts:
                 self.rtts.pop(0)  # Remove first item.
             self.rtts.append(rtt)
-            self.avgRTT = sum(self.rtts) / len(self.rtts)
+            self.avg_rtt = sum(self.rtts) / len(self.rtts)
 
-    def handleDisconnectMessage(self, message, address):
-        self.onAddressDisconnected(None)
+    def handle_disconnect_message(self, message, address):
+        self.on_address_disconnected(None)
 
-    def sendConnectRequest(self):
-        self.lastSnapshotTime = time.time()
-        self.messagingService.sendMessage(
-            "CONNECTREQUEST\n"+self.playerName, self.serverAddress, True)
+    def send_connect_request(self):
+        self.last_snapshot_time = time.time()
+        self.messaging_service.send_message(
+            "CONNECTREQUEST\n"+self.player_name, self.server_address, True)
 
-    def sendControlUpdate(self):
-        message = self.localPlayerManager.generateControlMessage()
-        self.localPlayerManager.clearFiredThisFrame()
+    def send_control_update(self):
+        message = self.local_player_manager.generate_control_message()
+        self.local_player_manager.clear_fired_this_frame()
         if message:  # message will be none if we are not actually connected
-            self.messagingService.sendMessage(
-                message, self.serverAddress, False)
+            self.messaging_service.send_message(
+                message, self.server_address, False)
 
-    def sendPing(self):
-        self.lastPingNumber += 1
-        message = "PING\n"+str(self.lastPingNumber)
-        self.messagingService.sendMessage(message, self.serverAddress, False)
-        self.lastPingTime = time.time()
+    def send_ping(self):
+        self.last_ping_number += 1
+        message = "PING\n"+str(self.last_ping_number)
+        self.messaging_service.send_message(message, self.server_address, False)
+        self.last_ping_time = time.time()
 
-    def checkForDisconnection(self, currentTime):
-        if currentTime - self.lastSnapshotTime > 10:
+    def check_for_disconnection(self, current_time):
+        if current_time - self.last_snapshot_time > 10:
             # Disconnected!
-            self.onAddressDisconnected(None)
+            self.on_address_disconnected(None)
 
-    def onAddressDisconnected(self, address):
+    def on_address_disconnected(self, address):
         print "Connection to server lost!"
         self.quit()
 
     def quit(self):
-        self.messagingService.sendMessage(
-            "DISCONNECT", self.serverAddress, False)
+        self.messaging_service.send_message(
+            "DISCONNECT", self.server_address, False)
         self.finished = True
 
     def go(self):
-        self.messagingService.startListening()
-        self.sendConnectRequest()
-        lastUpdateTime = 0
-        lastDisconnectCheckTime = time.time()
+        self.messaging_service.start_listening()
+        self.send_connect_request()
+        last_update_time = 0
+        last_disconnect_check_time = time.time()
         while not self.finished:
-            currentTime = time.time()
-            self.snapshotReceived = False
-            self.handleAllMessages()
-            if not self.snapshotReceived:  # Add this in later to increase smoothness of motion.
-                self.updateEntityPositions()
-            if currentTime - lastDisconnectCheckTime > 1.0:
-                self.checkForDisconnection(currentTime)
-            self.executeStuff()
-            self.gui.processEvents()
-            if (currentTime - lastUpdateTime) > 0.1:
-                self.sendControlUpdate()
-                lastUpdateTime = currentTime
-            if (currentTime - self.lastPingTime) > 1.0:
-                self.sendPing()
+            current_time = time.time()
+            self.snapshot_received = False
+            self.handle_all_messages()
+            if not self.snapshot_received:  # Add this in later to increase smoothness of motion.
+                self.update_entity_positions()
+            if current_time - last_disconnect_check_time > 1.0:
+                self.check_for_disconnection(current_time)
+            self.execute_stuff()
+            self.gui.process_events()
+            if (current_time - last_update_time) > 0.1:
+                self.send_control_update()
+                last_update_time = current_time
+            if (current_time - self.last_ping_time) > 1.0:
+                self.send_ping()
             self.gui.draw(self)
             self.gui.tick()
-        self.messagingService.stopListening()
+        self.messaging_service.stop_listening()

@@ -7,107 +7,107 @@ from interface import (
 
 class LocalPlayerManager:
     def __init__(self, gui):
-        self.entityID = None
-        self.downPressed = False
-        self.upPressed = False
-        self.leftPressed = False
-        self.rightPressed = False
-        self.spacePressed = False
-        self.firedThisFrame = False
-        gui.setEventHandler(DOWN_PRESSED_EVENT, self.onDownPressed)
-        gui.setEventHandler(DOWN_RELEASED_EVENT, self.onDownReleased)
-        gui.setEventHandler(UP_PRESSED_EVENT, self.onUpPressed)
-        gui.setEventHandler(UP_RELEASED_EVENT, self.onUpReleased)
-        gui.setEventHandler(LEFT_PRESSED_EVENT, self.onLeftPressed)
-        gui.setEventHandler(LEFT_RELEASED_EVENT, self.onLeftReleased)
-        gui.setEventHandler(RIGHT_PRESSED_EVENT, self.onRightPressed)
-        gui.setEventHandler(RIGHT_RELEASED_EVENT, self.onRightReleased)
-        gui.setEventHandler(SPACE_PRESSED_EVENT, self.onSpacePressed)
-        gui.setEventHandler(SPACE_RELEASED_EVENT, self.onSpaceReleased)
+        self.entity_id = None
+        self.down_pressed = False
+        self.up_pressed = False
+        self.left_pressed = False
+        self.right_pressed = False
+        self.space_pressed = False
+        self.fired_this_frame = False
+        gui.set_event_handler(DOWN_PRESSED_EVENT, self.on_down_pressed)
+        gui.set_event_handler(DOWN_RELEASED_EVENT, self.on_down_released)
+        gui.set_event_handler(UP_PRESSED_EVENT, self.on_up_pressed)
+        gui.set_event_handler(UP_RELEASED_EVENT, self.on_up_released)
+        gui.set_event_handler(LEFT_PRESSED_EVENT, self.on_left_pressed)
+        gui.set_event_handler(LEFT_RELEASED_EVENT, self.on_left_released)
+        gui.set_event_handler(RIGHT_PRESSED_EVENT, self.on_right_pressed)
+        gui.set_event_handler(RIGHT_RELEASED_EVENT, self.on_right_released)
+        gui.set_event_handler(SPACE_PRESSED_EVENT, self.on_space_pressed)
+        gui.set_event_handler(SPACE_RELEASED_EVENT, self.on_space_released)
 
-    def setEntity(self, entityID):
-        self.entityID = entityID
+    def set_entity(self, entity_id):
+        self.entity_id = entity_id
 
-    def clearFiredThisFrame(self):
-        self.firedThisFrame = False
+    def clear_fired_this_frame(self):
+        self.fired_this_frame = False
 
-    def onDownPressed(self):
-        self.downPressed = True
+    def on_down_pressed(self):
+        self.down_pressed = True
 
-    def onDownReleased(self):
-        self.downPressed = False
+    def on_down_released(self):
+        self.down_pressed = False
 
-    def onUpPressed(self):
-        self.upPressed = True
+    def on_up_pressed(self):
+        self.up_pressed = True
 
-    def onUpReleased(self):
-        self.upPressed = False
+    def on_up_released(self):
+        self.up_pressed = False
 
-    def onLeftPressed(self):
-        self.leftPressed = True
+    def on_left_pressed(self):
+        self.left_pressed = True
 
-    def onLeftReleased(self):
-        self.leftPressed = False
+    def on_left_released(self):
+        self.left_pressed = False
 
-    def onRightPressed(self):
-        self.rightPressed = True
+    def on_right_pressed(self):
+        self.right_pressed = True
 
-    def onRightReleased(self):
-        self.rightPressed = False
+    def on_right_released(self):
+        self.right_pressed = False
 
-    def onSpacePressed(self):
-        self.spacePressed = True
-        self.firedThisFrame = True
+    def on_space_pressed(self):
+        self.space_pressed = True
+        self.fired_this_frame = True
 
-    def onSpaceReleased(self):
-        self.spacePressed = False
+    def on_space_released(self):
+        self.space_pressed = False
 
-    def getRotationStatus(self):
-        if self.leftPressed and self.rightPressed:
+    def get_rotation_status(self):
+        if self.left_pressed and self.right_pressed:
             return "off"
-        elif self.leftPressed:
+        elif self.left_pressed:
             return "left"
-        elif self.rightPressed:
+        elif self.right_pressed:
             return "right"
         else:
             return "off"
 
-    def getThrottleStatus(self):
-        if self.upPressed and self.downPressed:
+    def get_throttle_status(self):
+        if self.up_pressed and self.down_pressed:
             return "off"
-        elif self.upPressed:
+        elif self.up_pressed:
             return "forward"
-        elif self.downPressed:
+        elif self.down_pressed:
             return "backward"
         else:
             return "off"
 
-    def getShootingStatus(self):
-        if self.spacePressed or self.firedThisFrame:
+    def get_shooting_status(self):
+        if self.space_pressed or self.fired_this_frame:
             return "on"
         else:
             return "off"
 
-    def generateControlMessage(self):
-        if self.entityID is None:
+    def generate_control_message(self):
+        if self.entity_id is None:
             return None
         else:
             # TODO: Replace with use of string.format
-            return ("CONTROL\n"+str(self.entityID)+"\nThrottle:" +
-                    self.getThrottleStatus()+"\nRotating:" +
-                    self.getRotationStatus()+"\nShooting:" +
-                    self.getShootingStatus())
+            return ("CONTROL\n"+str(self.entity_id)+"\nThrottle:" +
+                    self.get_throttle_status()+"\nRotating:" +
+                    self.get_rotation_status()+"\nShooting:" +
+                    self.get_shooting_status())
 
 
 class RemotePlayerManager:
-    def __init__(self, ipAddress, name, color, ship):
-        self.ipAddress = ipAddress
+    def __init__(self, ip_address, name, color, ship):
+        self.ip_address = ip_address
         self.name = name
         self.color = color
         self.ship = ship
         self.score = 0
-        ship.playerManager = self
-        self.timeLastHeardFrom = None
+        ship.player_manager = self
+        self.time_last_heard_from = None
 
     def resetScore(self):
         self.score = 0
