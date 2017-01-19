@@ -1,7 +1,6 @@
 import pygame
 
 QUIT_EVENT = "QUIT"
-
 LEFT_PRESSED_EVENT = "LEFT_PRESSED"
 LEFT_RELEASED_EVENT = "LEFT_RELEASED"
 RIGHT_PRESSED_EVENT = "RIGHT_PRESSED"
@@ -92,5 +91,5 @@ class GUI:
     def tick(self):
         self.clock.tick(25)
 
-# TODO: Remove circular dependency!
+# TODO: Fix this awkwardness!
 import mGlyphMap
